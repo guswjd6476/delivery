@@ -2,8 +2,13 @@
 
 import { useState, useEffect } from 'react';
 
+interface InventoryItem {
+    개수: number;
+    가격: number;
+}
+
 const InventoryForm = () => {
-    const [inventory, setInventory] = useState<any>({});
+    const [inventory, setInventory] = useState<Record<string, InventoryItem>>({});
     const [item, setItem] = useState<string>('주먹밥');
     const [quantity, setQuantity] = useState<number>(0);
     const [price, setPrice] = useState<number>(0);
