@@ -157,8 +157,15 @@ const MainPage = () => {
                     value={deliveryLocation}
                     onChange={(e) => setDeliveryLocation(e.target.value)}
                 />
+
+                <div className="w-full max-w-lg bg-yellow-100 p-4 rounded-lg shadow-lg text-center font-bold text-lg">
+                    <p className="text-sm text-gray-700 mb-2">
+                        입글을 하셨다면 입금완료에 체크 해주세요 (입금 확인이 되면 배달 출발합니다)
+                    </p>
+                    <p className="text-sm text-gray-700">현장에서 현금으로 결제 하신다면 현금결제를 체크 해주세요</p>
+                </div>
                 <select
-                    className="w-full p-2 border rounded mt-2"
+                    className="w-full p-3 border-2 border-gray-300 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 mt-2 bg-white"
                     value={paymentMethod}
                     onChange={(e) => setPaymentMethod(e.target.value)}
                 >
