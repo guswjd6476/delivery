@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react';
 
 type Order = {
     id: number;
-    item: string;
-    quantity: number;
-    payment: string;
+    items: { item: string; quantity: number; price: number }[]; // 여러 개의 상품을 처리
+    total_amount: number;
+    payment_method: string;
     name: string;
     contact: string;
     delivery_location: string;
@@ -14,7 +14,7 @@ type Order = {
 };
 
 const OrdersPage = () => {
-    const [orders, setOrders] = useState<Order[]>([]); // Use the Order type here
+    const [orders, setOrders] = useState<Order[]>([]);
 
     useEffect(() => {
         const fetchOrders = async () => {
@@ -31,12 +31,11 @@ const OrdersPage = () => {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ id, delivered }), // id와 delivered를 JSON으로 전달
+            body: JSON.stringify({ id, delivered }),
         });
 
         const data = await response.json();
         if (data.updatedOrder) {
-            // 서버에서 응답 받은 업데이트된 주문을 사용하여 로컬 상태를 업데이트
             setOrders((prevOrders) => prevOrders.map((order) => (order.id === id ? { ...order, delivered } : order)));
             console.log('배달 상태 업데이트 성공:', data.updatedOrder);
         } else {
@@ -45,15 +44,15 @@ const OrdersPage = () => {
     };
 
     return (
-        <div>
-            <h1 className="text-2xl mb-4">주문 내역</h1>
-            <table className="min-w-full bg-white border-collapse">
+        <div className="p-6">
+            <h1 className="text-2xl font-bold mb-4">주문 내역</h1>
+            <table className="w-full bg-white border border-collapse shadow-md">
                 <thead>
-                    <tr>
+                    <tr className="bg-gray-100">
                         <th className="py-2 px-4 border">주문 ID</th>
-                        <th className="py-2 px-4 border">아이템</th>
-                        <th className="py-2 px-4 border">수량</th>
-                        <th className="py-2 px-4 border">가격</th>
+                        <th className="py-2 px-4 border">상품 목록</th>
+                        <th className="py-2 px-4 border">총 결제 금액</th>
+                        <th className="py-2 px-4 border">결제 방법</th>
                         <th className="py-2 px-4 border">이름</th>
                         <th className="py-2 px-4 border">연락처</th>
                         <th className="py-2 px-4 border">배달 장소</th>
@@ -62,22 +61,28 @@ const OrdersPage = () => {
                 </thead>
                 <tbody>
                     {orders.map((order) => (
-                        <tr key={order.id}>
-                            <td className="py-2 px-4 border">{order.id}</td>
-                            <td className="py-2 px-4 border">{order.item}</td>
-                            <td className="py-2 px-4 border">{order.quantity}</td>
-                            <td className="py-2 px-4 border">{order.payment}</td>
-                            <td className="py-2 px-4 border">{order.name}</td>
-                            <td className="py-2 px-4 border">{order.contact}</td>
-                            <td className="py-2 px-4 border">{order.delivery_location}</td>
+                        <tr key={order.id} className="border-t">
+                            <td className="py-2 px-4 border text-center">{order.id}</td>
+                            <td className="py-2 px-4 border">
+                                <ul>
+                                    {order.items.map((item, index) => (
+                                        <li key={index} className="text-sm">
+                                            {item.item} ({item.quantity}개) - {item.price.toLocaleString()}원
+                                        </li>
+                                    ))}
+                                </ul>
+                            </td>
+                            <td className="py-2 px-4 border text-center">{order.total_amount.toLocaleString()}원</td>
+                            <td className="py-2 px-4 border text-center">{order.payment_method}</td>
+                            <td className="py-2 px-4 border text-center">{order.name}</td>
+                            <td className="py-2 px-4 border text-center">{order.contact}</td>
+                            <td className="py-2 px-4 border text-center">{order.delivery_location}</td>
                             <td className="py-2 px-4 border text-center">
                                 <input
                                     type="checkbox"
-                                    checked={order.delivered} // delivered 상태를 체크로 반영
-                                    onChange={() => {
-                                        const newStatus = order.delivered ? false : true; // delivered 상태 변경
-                                        updateDeliveryStatus(order.id, newStatus);
-                                    }}
+                                    checked={order.delivered}
+                                    onChange={() => updateDeliveryStatus(order.id, !order.delivered)}
+                                    className="w-5 h-5"
                                 />
                             </td>
                         </tr>
