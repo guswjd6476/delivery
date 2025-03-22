@@ -8,7 +8,6 @@ const menu = [
     { item: '콤부차', price: 3000, picture: '/콤부차.jpeg' },
     { item: '김치참치주먹밥', price: 3000, picture: '/다운로드.jpeg' },
     { item: '주먹밥음료세트', price: 5000, picture: '/set.jpg' },
-    { item: '향수', price: 15000, picture: '/parfum.jpg' },
 ];
 
 const MainPage = () => {
