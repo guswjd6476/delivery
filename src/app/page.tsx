@@ -2,22 +2,22 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
-interface InventoryItem {
-    id: number;
-    item: string;
-    quantity: number;
-    price: number;
-}
+const menu = [
+    { item: '콤부차', price1: 3000, price: 3000, picture: '/콤부차.jpeg' },
+    { item: '김치참치주먹밥', price1: 3000, price: 3000, picture: '/다운로드.jpeg' },
+    { item: '주먹밥음료세트', price1: 6000, price: 5000, picture: '/set.jpg' },
+    { item: '향수', price1: 20000, price: 15000, picture: '/parfum.jpg' },
+];
 
 const MainPage = () => {
     const [isAdmin, setIsAdmin] = useState(false);
-    const [inventory, setInventory] = useState<InventoryItem[]>([]);
     const [selectedItem, setSelectedItem] = useState<string>('주먹밥');
     const [quantity, setQuantity] = useState<number>(1);
     const [depositAmount, setDepositAmount] = useState<number>(0);
     const [paymentMethod, setPaymentMethod] = useState<'입금 완료' | '현금 결제'>('입금 완료');
-    const [orderSuccess, setOrderSuccess] = useState<boolean>(false);
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [name, setName] = useState<string>('');
     const [contact, setContact] = useState<string>('');
     const [deliveryLocation, setDeliveryLocation] = useState<string>('');
@@ -30,38 +30,13 @@ const MainPage = () => {
         }
     }, []);
 
-    // 재고 데이터를 가져오는 함수
-    const fetchInventory = async () => {
-        try {
-            const response = await fetch('/api/inventory', {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-                },
-            });
-            const result = await response.json();
-            if (response.ok) {
-                setInventory(result.inventory);
-            } else {
-                console.error('재고 정보를 불러오는 데 실패했습니다.');
-            }
-        } catch (error) {
-            console.error('API 요청 오류:', error);
-        }
-    };
-
     useEffect(() => {
-        fetchInventory();
-    }, []);
-
-    // 선택된 항목과 수량에 따라 입금금액 계산
-    useEffect(() => {
-        const selected = inventory.find((item) => item.item === selectedItem);
+        const selected = menu.find((item) => item.item === selectedItem);
         if (selected) {
             setDepositAmount(selected.price * quantity);
         }
-    }, [selectedItem, quantity, inventory]);
+    }, [selectedItem, quantity]);
 
-    // 주문을 처리하는 함수
     const handleOrder = async () => {
         try {
             const orderData = {
@@ -85,7 +60,7 @@ const MainPage = () => {
             });
 
             if (response.ok) {
-                setOrderSuccess(true); // 주문 성공 상태 업데이트
+                router.push('/order-success');
             } else {
                 console.error('주문 처리에 실패했습니다.');
             }
@@ -95,150 +70,108 @@ const MainPage = () => {
     };
 
     return (
-        <div className="p-4">
-            {isAdmin ? (
-                <button
-                    onClick={() => router.push('/admin/dashboard')}
-                    className="bg-blue-500 text-white px-4 py-2 rounded"
-                >
-                    관리자 대시보드
-                </button>
-            ) : (
-                <button onClick={() => router.push('/admin/login')} className="bg-blue-500 text-white rounded">
-                    관리자 로그인
-                </button>
-            )}
+        <div className="p-6 bg-gray-50 min-h-screen flex flex-col items-center space-y-6">
+            <button
+                onClick={() => router.push(isAdmin ? '/admin/dashboard' : '/admin/login')}
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg shadow-md hover:bg-blue-700 w-full max-w-sm"
+            >
+                {isAdmin ? '관리자 대시보드' : '관리자 로그인'}
+            </button>
 
-            {/* 재고와 가격을 표시하는 부분 (유저가 볼 수 있도록) */}
-            <div className="mt-6">
-                <h2 className="text-xl mb-4">현재 재고 및 가격</h2>
-                <div className="grid grid-cols-3 gap-4">
-                    {inventory.map((item) => (
-                        <div key={item.id} className="border p-4 rounded-lg">
-                            <h3 className="font-bold">{item.item}</h3>
-                            <p>수량: {item.quantity}</p>
-                            <p>가격: {item.price} 원</p>
+            <div className="w-full max-w-lg bg-white p-6 rounded-lg shadow-lg">
+                <h2 className="text-2xl font-bold text-gray-800 text-center">현재 재고 및 가격</h2>
+                <div className="mt-4 space-y-4">
+                    {menu.map((item) => (
+                        <div key={item.item} className="flex items-center gap-4 p-2 border rounded-lg h-20 bg-gray-100">
+                            <Image
+                                src={item.picture}
+                                alt={item.item}
+                                width={30}
+                                height={30}
+                                className="rounded-lg cursor-pointer"
+                                onClick={() => setSelectedImage(item.picture)}
+                            />
+                            <div>
+                                <h3 className="font-bold text-gray-700 text-lg">{item.item}</h3>
+                                <p className="text-gray-600">가격: {item.price} 원</p>
+                            </div>
                         </div>
                     ))}
                 </div>
             </div>
 
-            {/* 주문 항목 선택 및 수량 입력 부분 */}
-            <div className="mt-6">
-                <h2 className="text-xl mb-4">주문 항목 선택</h2>
-                <div>
-                    <label htmlFor="item" className="block">
-                        아이템
-                    </label>
+            {selectedImage && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                    <div className="bg-white p-4 rounded-lg relative">
+                        <Image src={selectedImage} alt="상품 이미지" width={400} height={400} className="rounded-lg" />
+                        <button
+                            onClick={() => setSelectedImage(null)}
+                            className="absolute top-2 right-2 text-red-500 text-lg"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            <div className="w-full max-w-lg bg-white p-6 rounded-lg shadow-lg">
+                <h2 className="text-2xl font-bold text-gray-800 text-center">주문하기</h2>
+                <div className="space-y-4">
                     <select
-                        id="item"
+                        className="w-full p-2 border rounded"
                         value={selectedItem}
                         onChange={(e) => setSelectedItem(e.target.value)}
-                        className="mt-2 p-2 border rounded"
                     >
-                        {inventory.map((item) => (
-                            <option key={item.id} value={item.item}>
+                        {menu.map((item) => (
+                            <option key={item.item} value={item.item}>
                                 {item.item}
                             </option>
                         ))}
                     </select>
-                </div>
-                <div className="mt-4">
-                    <label htmlFor="quantity" className="block">
-                        수량
-                    </label>
                     <input
                         type="number"
-                        id="quantity"
+                        className="w-full p-2 border rounded"
                         value={quantity}
                         onChange={(e) => setQuantity(Number(e.target.value))}
-                        className="mt-2 p-2 border rounded"
                         min="1"
                     />
-                </div>
-
-                {/* 자동으로 계산된 입금 금액 */}
-                <div className="mt-4">
-                    <label htmlFor="depositAmount" className="block">
-                        입금 금액
-                    </label>
-                    <input
-                        type="number"
-                        id="depositAmount"
-                        value={depositAmount}
-                        readOnly
-                        className="mt-2 p-2 border rounded"
-                    />
-                </div>
-            </div>
-
-            {/* 사용자 정보 입력 */}
-            <div className="mt-6">
-                <h2 className="text-xl mb-4">주문자 정보 입력</h2>
-                <div>
-                    <label htmlFor="name" className="block">
-                        이름
-                    </label>
+                    <input type="number" className="w-full p-2 border rounded" value={depositAmount} readOnly />
                     <input
                         type="text"
-                        id="name"
+                        className="w-full p-2 border rounded"
+                        placeholder="이름"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="mt-2 p-2 border rounded"
                     />
-                </div>
-                <div className="mt-4">
-                    <label htmlFor="contact" className="block">
-                        연락처
-                    </label>
                     <input
                         type="text"
-                        id="contact"
+                        className="w-full p-2 border rounded"
+                        placeholder="연락처"
                         value={contact}
                         onChange={(e) => setContact(e.target.value)}
-                        className="mt-2 p-2 border rounded"
                     />
-                </div>
-                <div className="mt-4">
-                    <label htmlFor="deliveryLocation" className="block">
-                        배달 장소
-                    </label>
                     <input
                         type="text"
-                        id="deliveryLocation"
+                        className="w-full p-2 border rounded"
+                        placeholder="배달 장소"
                         value={deliveryLocation}
                         onChange={(e) => setDeliveryLocation(e.target.value)}
-                        className="mt-2 p-2 border rounded"
                     />
-                </div>
-            </div>
-
-            {/* 결제 방법 선택 */}
-            <div className="mt-6">
-                <h2 className="text-xl mb-4">결제 방법 선택</h2>
-                <div>
-                    <label htmlFor="paymentMethod" className="block">
-                        결제 방법
-                    </label>
                     <select
-                        id="paymentMethod"
+                        className="w-full p-2 border rounded"
                         value={paymentMethod}
                         onChange={(e) => setPaymentMethod(e.target.value as '입금 완료' | '현금 결제')}
-                        className="mt-2 p-2 border rounded"
                     >
                         <option value="입금 완료">입금 완료</option>
                         <option value="현금 결제">현금 결제</option>
                     </select>
                 </div>
-            </div>
-
-            {/* 주문 완료 버튼 및 알림 */}
-            <div className="mt-6">
-                <button onClick={handleOrder} className="bg-green-500 text-white px-4 py-2 rounded">
+                <button
+                    onClick={handleOrder}
+                    className="mt-6 bg-green-600 text-white px-6 py-3 rounded-lg shadow-md hover:bg-green-700 w-full"
+                >
                     주문 완료
                 </button>
-
-                {orderSuccess && <p className="mt-4 text-green-500 font-bold">주문이 성공적으로 완료되었습니다!</p>}
             </div>
         </div>
     );
