@@ -13,10 +13,11 @@ const menu = [
 
 const MainPage = () => {
     const [isAdmin, setIsAdmin] = useState(false);
-    const [selectedItems, setSelectedItems] = useState<{ item: string; quantity: number }[]>([]);
+    const [selectedItems, setSelectedItems] = useState<{ item: string; quantity: number; price: number }[]>([]);
     const [name, setName] = useState('');
     const [contact, setContact] = useState('');
     const [deliveryLocation, setDeliveryLocation] = useState('');
+    const [paymentMethod, setPaymentMethod] = useState('계좌이체'); // 기본값 설정
     const router = useRouter();
 
     useEffect(() => {
@@ -28,9 +29,14 @@ const MainPage = () => {
         setSelectedItems((prev) => {
             const existingItem = prev.find((i) => i.item === item);
             if (existingItem) {
-                return prev.map((i) => (i.item === item ? { ...i, quantity: i.quantity + 1 } : i));
+                return prev.map((i) =>
+                    i.item === item
+                        ? { ...i, quantity: i.quantity + 1 } // 기존 수량에 +1 추가
+                        : i
+                );
             }
-            return [...prev, { item, quantity: 1 }];
+            const price = menu.find((m) => m.item === item)?.price || 0; // 해당 상품의 가격
+            return [...prev, { item, quantity: 1, price }]; // 새로운 아이템 추가
         });
     };
 
@@ -39,12 +45,15 @@ const MainPage = () => {
     };
 
     const totalAmount = selectedItems.reduce(
-        (sum, i) => sum + (menu.find((m) => m.item === i.item)?.price || 0) * i.quantity,
+        (sum, i) => sum + i.price * i.quantity, // 가격과 수량을 곱해서 계산
         0
     );
 
     const handleOrder = async () => {
         if (selectedItems.length === 0) return alert('상품을 선택해주세요.');
+        if (!name.trim() || !contact.trim() || !deliveryLocation.trim()) {
+            return alert('이름, 연락처, 배달 장소를 입력해주세요.');
+        }
 
         try {
             const response = await fetch('/api/orders', {
@@ -56,11 +65,16 @@ const MainPage = () => {
                     name,
                     contact,
                     deliveryLocation,
+                    paymentMethod, // 선택한 결제 방식 포함
                     status: '주문 완료',
                 }),
             });
-            if (response.ok) router.push('/order-success');
-            else alert('주문 실패!');
+
+            if (response.ok) {
+                router.push('/order-success');
+            } else {
+                alert('주문 실패!');
+            }
         } catch (error) {
             console.error('API 요청 오류:', error);
         }
@@ -115,6 +129,13 @@ const MainPage = () => {
 
             <div className="w-full max-w-lg bg-white p-6 rounded-lg shadow-lg">
                 <h2 className="text-2xl font-bold text-center">주문하기</h2>
+                <div className="bg-yellow-100 p-4 rounded-lg text-center font-bold text-lg">
+                    💳 계좌이체 정보
+                    <br />
+                    카카오뱅크: <span className="text-blue-600">3333-183-590664 손희수</span>
+                    <br />
+                    진짜배기 특전대에 후원 됩니다!
+                </div>
                 <input
                     type="text"
                     placeholder="이름"
@@ -136,6 +157,14 @@ const MainPage = () => {
                     value={deliveryLocation}
                     onChange={(e) => setDeliveryLocation(e.target.value)}
                 />
+                <select
+                    className="w-full p-2 border rounded mt-2"
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                >
+                    <option value="계좌이체">입금 완료</option>
+                    <option value="카드 결제">현금 결제</option>
+                </select>
                 <button
                     onClick={handleOrder}
                     className="mt-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-md hover:bg-green-700 w-full"
