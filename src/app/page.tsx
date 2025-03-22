@@ -13,12 +13,10 @@ const menu = [
 
 const MainPage = () => {
     const [isAdmin, setIsAdmin] = useState(false);
-    const [selectedItems, setSelectedItems] = useState<{ item: string; quantity: number; price: number }[]>([]);
-    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [selectedItems, setSelectedItems] = useState<{ item: string; quantity: number }[]>([]);
     const [name, setName] = useState('');
     const [contact, setContact] = useState('');
     const [deliveryLocation, setDeliveryLocation] = useState('');
-    const [paymentMethod, setPaymentMethod] = useState<'입금 완료' | '현금 결제'>('입금 완료');
     const router = useRouter();
 
     useEffect(() => {
@@ -26,13 +24,13 @@ const MainPage = () => {
         setIsAdmin(adminStatus === 'true');
     }, []);
 
-    const handleAddItem = (item: string, price: number) => {
+    const handleAddItem = (item: string) => {
         setSelectedItems((prev) => {
             const existingItem = prev.find((i) => i.item === item);
             if (existingItem) {
                 return prev.map((i) => (i.item === item ? { ...i, quantity: i.quantity + 1 } : i));
             }
-            return [...prev, { item, quantity: 1, price }];
+            return [...prev, { item, quantity: 1 }];
         });
     };
 
@@ -40,7 +38,10 @@ const MainPage = () => {
         setSelectedItems((prev) => prev.filter((i) => i.item !== item));
     };
 
-    const totalAmount = selectedItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
+    const totalAmount = selectedItems.reduce(
+        (sum, i) => sum + (menu.find((m) => m.item === i.item)?.price || 0) * i.quantity,
+        0
+    );
 
     const handleOrder = async () => {
         if (selectedItems.length === 0) return alert('상품을 선택해주세요.');
@@ -52,7 +53,6 @@ const MainPage = () => {
                 body: JSON.stringify({
                     items: selectedItems,
                     totalAmount,
-                    paymentMethod,
                     name,
                     contact,
                     deliveryLocation,
@@ -80,20 +80,13 @@ const MainPage = () => {
                 <div className="space-y-4">
                     {menu.map(({ item, price, picture }) => (
                         <div key={item} className="flex items-center gap-4 p-2 border rounded-lg bg-gray-100">
-                            <Image
-                                src={picture}
-                                alt={item}
-                                width={50}
-                                height={50}
-                                className="cursor-pointer"
-                                onClick={() => setSelectedImage(picture)}
-                            />
+                            <Image src={picture} alt={item} width={50} height={50} />
                             <div>
                                 <h3 className="font-bold">{item}</h3>
                                 <p>{price} 원</p>
                             </div>
                             <button
-                                onClick={() => handleAddItem(item, price)}
+                                onClick={() => handleAddItem(item)}
                                 className="ml-auto bg-green-500 px-3 py-1 text-white rounded"
                             >
                                 추가
@@ -106,7 +99,7 @@ const MainPage = () => {
             {selectedItems.length > 0 && (
                 <div className="w-full max-w-lg bg-white p-6 rounded-lg shadow-lg">
                     <h2 className="text-2xl font-bold text-center">주문 목록</h2>
-                    {selectedItems.map(({ item, quantity, price }) => (
+                    {selectedItems.map(({ item, quantity }) => (
                         <div key={item} className="flex justify-between p-2 border-b">
                             <p>
                                 {item} x {quantity}
