@@ -131,7 +131,7 @@ const MainPage = () => {
                 <div className="bg-yellow-100 p-4 rounded-lg text-center font-bold text-lg">
                     💳 계좌이체 정보
                     <br />
-                    카카오뱅크: <span className="text-blue-600">3333-183-590664 손희수</span>
+                    카카오뱅크: <span className="text-blue-600">1234-567-123456 홍길동</span>
                     <br />
                 </div>
                 <input
