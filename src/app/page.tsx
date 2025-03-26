@@ -133,7 +133,6 @@ const MainPage = () => {
                     <br />
                     카카오뱅크: <span className="text-blue-600">3333-183-590664 손희수</span>
                     <br />
-                    진짜배기 특전대에 후원 됩니다!
                 </div>
                 <input
                     type="text"
